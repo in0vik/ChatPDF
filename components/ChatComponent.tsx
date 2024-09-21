@@ -38,14 +38,15 @@ function ChatComponent({ chatId }: Props) {
   }, [messages]);
 
   return (
-    <div className="relative max-h-screen overflow-scroll h-full" id="message-container">
-      <div className="sticky top-0 inset-x-0 p-2 bg-white h-fit">
-        <h3 className="text-xl font-bold">Chat</h3>
+    <div className='relative h-full'>
+      <div className="max-h-screen overflow-scroll h-full pb-16" id="message-container">
+        <div className="sticky top-0 inset-x-0 p-2 bg-white h-fit">
+          <h3 className="text-xl font-bold">Chat</h3>
+        </div>
+        {/* messages */}
+        <MessageList messages={messages} isLoading={isLoading} />
       </div>
-      {/* messages */}
-      <MessageList messages={messages} isLoading={isLoading} />
-
-      <form onSubmit={handleSubmit} className="absolute bottom-0 inset-x-0 px-2 py-4 bg-white">
+      <form onSubmit={handleSubmit} className="absolute bottom-0 inset-x-0 px-2 pt-2 pb-4 bg-white">
         <div className="flex">
           <Input
             value={input}

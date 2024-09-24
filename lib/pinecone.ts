@@ -1,12 +1,11 @@
 import { Pinecone, PineconeRecord } from '@pinecone-database/pinecone';
-import { downloadFromS3 } from './s3-server';
-import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { RecursiveCharacterTextSplitter, Document } from '@pinecone-database/doc-splitter';
 import { getEmbeddings } from './embedings';
 import md5 from 'md5';
 import { convertToAscii } from './utils';
+import { extractTextFromS3PDF } from './ocr';
 
-type PDFPage = {
+export type PDFPage = {
   pageContent: string;
   metadata: {
     loc: { pageNumber: number };
@@ -20,22 +19,16 @@ export const getPineconeClient = () => {
 };
 
 export async function loadS3IntoPinecone(fileKey: string) {
-  // obtain the pdf -> downlaod and read from pdf
-  const file_name = await downloadFromS3(fileKey);
-  if (!file_name) {
-    throw new Error('could not download file from s3');
-  }
-
-  const loader = new PDFLoader(file_name);
-  const pages = (await loader.load()) as PDFPage[];
+  
+  const ocrResponse = await extractTextFromS3PDF(process.env.NEXT_PUBLIC_S3_BUCKET_NAME!, fileKey);
 
   // split and segment the pdf
-  const documents = await Promise.all(pages.map(prepareDocument));
-  // vectorise and embed individual documents
+  const documents = await Promise.all(ocrResponse.map(prepareDocument));
+  // vectorize and embed individual documents
 
   const vectors = await Promise.all(documents.flat().map(embedDocument));
 
-    // upload to pinecone
+  // upload to pinecone
 
   const client = await getPineconeClient();
   const pineconeIndex = await client.index('chatpdf');
@@ -61,7 +54,7 @@ async function embedDocument(doc: Document) {
       },
     } as PineconeRecord;
   } catch (error) {
-    console.log("error embedding document", error);
+    console.log('error embedding document', error);
     throw error;
   }
 }

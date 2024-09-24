@@ -9,7 +9,7 @@ export async function extractTextFromS3PDF(
   bucketName: string,
   documentKey: string
 ): Promise<PDFPage[]> {
-  const client = new TextractClient({ region: process.env.AWS_S3_REGION! });
+  const client = new TextractClient({ region: 'us-east-1' });
 
   const startCommand = new StartDocumentTextDetectionCommand({
     DocumentLocation: {
@@ -19,6 +19,7 @@ export async function extractTextFromS3PDF(
       },
     },
   });
+
   const startResponse = await client.send(startCommand);
 
   const jobId = startResponse.JobId;

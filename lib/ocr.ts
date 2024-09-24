@@ -5,11 +5,28 @@ import {
 } from '@aws-sdk/client-textract';
 import { PDFPage } from './pinecone';
 
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
+
+async function getCallerIdentity() {
+  const stsClient = new STSClient({ region: 'us-east-1' });
+  const command = new GetCallerIdentityCommand({});
+  const response = await stsClient.send(command);
+  console.log("🚀 Caller Identity: ", response);
+}
+
+getCallerIdentity();
+
 export async function extractTextFromS3PDF(
   bucketName: string,
   documentKey: string
 ): Promise<PDFPage[]> {
-  const client = new TextractClient({ region: 'us-east-1' });
+  const client = new TextractClient({
+    region: 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.NEXT_PUBLIC_S3_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.NEXT_PUBLIC_S3_SECRET_ACCESS_KEY!,
+    },
+  });
 
   const startCommand = new StartDocumentTextDetectionCommand({
     DocumentLocation: {
